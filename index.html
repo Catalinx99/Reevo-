@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Board Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        /* Dark theme variables */
+        --bg-gradient: linear-gradient(
+          135deg,
+          #0a0a0a 0%,
+          #1a1a2e 25%,
+          #16213e 50%,
+          #0f0f23 75%,
+          #000000 100%
+        );
+        --text-color: #fff;
+        --game-area-bg: linear-gradient(145deg, #1a1a2e, #16213e);
+        --game-area-border: rgba(0, 255, 127, 0.3);
+        --game-area-glow: #00ff7f;
+        --info-panel-bg: linear-gradient(
+          145deg,
+          rgba(0, 0, 0, 0.8),
+          rgba(26, 26, 46, 0.9)
+        );
+        --info-panel-border: #00ff7f;
+        --info-label-color: #00ff7f;
+        --info-value-color: #ff6b35;
+        --canvas-border: #00ff7f;
+        --canvas-bg: linear-gradient(
+          180deg,
+          #001122 0%,
+          #002244 50%,
+          #000011 100%
+        );
+        --controls-bg: linear-gradient(145deg, #000000, #1a1a2e);
+        --controls-border: #ff6b35;
+        --controls-title-color: #ff6b35;
+        --control-group-bg: linear-gradient(145deg, #1a1a2e, #16213e);
+        --control-label-color: #00ff7f;
+        --control-btn-bg: linear-gradient(145deg, #ff6b35, #ff4500);
+        --control-value-bg: linear-gradient(145deg, #000000, #1a1a2e);
+        --control-value-color: #00ff41;
+        --instructions-bg: linear-gradient(
+          145deg,
+          rgba(26, 26, 46, 0.8),
+          rgba(22, 33, 62, 0.8)
+        );
+        --instructions-border: #ff1493;
+        --instructions-title-color: #ff1493;
+        --instructions-text-color: #ccc;
+      }
+
+      [data-theme="light"] {
+        /* Light theme variables */
+        --bg-gradient: linear-gradient(
+          135deg,
+          #f8f4e6 0%,
+          #e8dcc0 25%,
+          #d4c5a0 50%,
+          #c4b186 75%,
+          #b5a373 100%
+        );
+        --text-color: #4a4a4a;
+        --game-area-bg: linear-gradient(145deg, #ffffff, #f5f5f5);
+        --game-area-border: rgba(139, 195, 74, 0.5);
+        --game-area-glow: #8bc34a;
+        --info-panel-bg: linear-gradient(145deg, #fff, #f8f8f8);
+        --info-panel-border: #8bc34a;
+        --info-label-color: #2e7d32;
+        --info-value-color: #ff5722;
+        --canvas-border: #8bc34a;
+        --canvas-bg: linear-gradient(
+          180deg,
+          #e3f2fd 0%,
+          #bbdefb 50%,
+          #90caf9 100%
+        );
+        --controls-bg: linear-gradient(145deg, #fff, #f8f8f8);
+        --controls-border: #ff9800;
+        --controls-title-color: #e65100;
+        --control-group-bg: linear-gradient(145deg, #fff, #f5f5f5);
+        --control-label-color: #e65100;
+        --control-btn-bg: linear-gradient(145deg, #8bc34a, #689f38);
+        --control-value-bg: linear-gradient(145deg, #fff, #f5f5f5);
+        --control-value-color: #d32f2f;
+        --instructions-bg: linear-gradient(145deg, #fff, #f8f8f8);
+        --instructions-border: #673ab7;
+        --instructions-title-color: #512da8;
+        --instructions-text-color: #666;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Nunito", sans-serif;
+        background: var(--bg-gradient);
+        min-height: 100vh;
+        color: var(--text-color);
+        overflow-x: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .theme-toggle {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+      }
+
+      .theme-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+      }
+
+      .theme-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(145deg, #333, #555);
+        transition: 0.4s;
+        border-radius: 34px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background: linear-gradient(145deg, #fff, #f0f0f0);
+        transition: 0.4s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      input:checked + .slider {
+        background: linear-gradient(145deg, #8bc34a, #689f38);
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+
+      .theme-icons {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        pointer-events: none;
+      }
+
+      .sun-icon {
+        left: 8px;
+        color: #ffa500;
+      }
+
+      .moon-icon {
+        right: 8px;
+        color: #fff;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+            circle at 20% 80%,
+            rgba(0, 255, 127, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(255, 69, 0, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 40% 40%,
+            rgba(255, 20, 147, 0.1) 0%,
+            transparent 50%
+          );
+        animation: backgroundPulse 20s ease-in-out infinite alternate;
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      @keyframes backgroundPulse {
+        0% {
+          opacity: 0.3;
+        }
+        100% {
+          opacity: 0.7;
+        }
+      }
+
+      .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        width: 98%;
+      }
+
+      .game-area {
+        background: var(--game-area-bg);
+        border-radius: 25px;
+        padding: 25px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1),
+          0 0 0 2px var(--game-area-glow);
+        border: 1px solid var(--game-area-border);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .game-area::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(var(--game-area-glow), 0.1),
+          transparent
+        );
+        animation: shimmer 4s infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          left: -100%;
+        }
+        100% {
+          left: 100%;
+        }
+      }
+
+      .info-panel {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: var(--info-panel-bg);
+        backdrop-filter: blur(10px);
+        padding: 20px 25px;
+        border-radius: 20px;
+        font-family: "Fredoka", cursive;
+        border: 2px solid var(--info-panel-border);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        z-index: 10;
+        min-width: 200px;
+      }
+
+      .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .info-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .info-label {
+        color: var(--info-label-color);
+        font-weight: 600;
+        font-size: 1rem;
+      }
+
+      .info-value {
+        color: var(--info-value-color);
+        font-weight: 700;
+        font-size: 1.2rem;
+        text-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+      }
+
+      .canvas-container {
+        position: relative;
+        width: 100%;
+        height: 70vh;
+        min-height: 500px;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 3px solid var(--canvas-border);
+        box-shadow: 0 0 30px rgba(0, 255, 127, 0.3),
+          inset 0 0 20px rgba(0, 0, 0, 0.3);
+        background: var(--canvas-bg);
+      }
+
+      #canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        background: var(--canvas-bg);
+      }
+
+      .controls {
+        margin-top: 25px;
+        background: var(--controls-bg);
+        border-radius: 25px;
+        padding: 30px;
+        border: 2px solid var(--controls-border);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+      }
+
+      .controls-title {
+        text-align: center;
+        font-family: "Fredoka", cursive;
+        font-size: 1.8rem;
+        color: var(--controls-title-color);
+        margin-bottom: 25px;
+        font-weight: 600;
+        text-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+      }
+
+      .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+      }
+
+      .control-group {
+        background: var(--control-group-bg);
+        padding: 25px;
+        border-radius: 20px;
+        border: 1px solid rgba(0, 255, 127, 0.2);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .control-label {
+        font-family: "Fredoka", cursive;
+        font-weight: 600;
+        font-size: 1.2rem;
+        color: var(--control-label-color);
+        margin-bottom: 20px;
+        text-align: center;
+        text-transform: none;
+        letter-spacing: normal;
+      }
+
+      .control-buttons {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+      }
+
+      .control-btn {
+        width: 55px;
+        height: 55px;
+        border: none;
+        border-radius: 50%;
+        background: var(--control-btn-bg);
+        color: #000;
+        font-size: 28px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        font-family: "Fredoka", cursive;
+      }
+
+      .control-btn::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.3s ease;
+      }
+
+      .control-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 15px 25px rgba(255, 107, 53, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      }
+
+      .control-btn:hover::before {
+        width: 100%;
+        height: 100%;
+      }
+
+      .control-btn:active {
+        transform: translateY(0) scale(0.95);
+        box-shadow: 0 5px 10px rgba(255, 107, 53, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .control-value {
+        background: var(--control-value-bg);
+        color: var(--control-value-color);
+        padding: 15px 25px;
+        border-radius: 15px;
+        font-family: "Fredoka", cursive;
+        font-size: 1.4rem;
+        font-weight: 600;
+        min-width: 90px;
+        text-align: center;
+        border: 2px solid rgba(0, 255, 65, 0.3);
+        box-shadow: 0 0 15px rgba(0, 255, 65, 0.2),
+          inset 0 1px 0 rgba(0, 255, 65, 0.1);
+        text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+      }
+
+      .instructions {
+        margin-top: 25px;
+        padding: 25px;
+        background: var(--instructions-bg);
+        border-radius: 20px;
+        border: 2px solid var(--instructions-border);
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      .instructions h3 {
+        font-family: "Fredoka", cursive;
+        color: var(--instructions-title-color);
+        margin-bottom: 15px;
+        font-size: 1.4rem;
+        font-weight: 600;
+        text-shadow: 0 0 15px rgba(255, 20, 147, 0.5);
+      }
+
+      .instructions p {
+        color: var(--instructions-text-color);
+        font-size: 1rem;
+        line-height: 1.6;
+        font-weight: 500;
+      }
+
+      @media (max-width: 768px) {
+        .main-container {
+          padding: 10px;
+        }
+
+        .game-area {
+          padding: 20px;
+        }
+
+        .canvas-container {
+          height: 45vh;
+          min-height: 300px;
+          max-height: 400px;
+        }
+
+        .controls-grid {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+
+        .control-buttons {
+          gap: 15px;
+        }
+
+        .control-btn {
+          width: 45px;
+          height: 45px;
+          font-size: 22px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
+        }
+
+        .control-value {
+          font-size: 1.1rem;
+          padding: 12px 18px;
+          min-width: 75px;
+        }
+
+        .info-panel {
+          position: relative;
+          margin-bottom: 15px;
+          left: 0;
+          top: 0;
+          min-width: auto;
+          display: flex;
+          gap: 25px;
+          justify-content: center;
+        }
+
+        .controls {
+          margin-top: 20px;
+          padding: 20px;
+        }
+
+        .controls-title {
+          font-size: 1.4rem;
+          margin-bottom: 20px;
+        }
+
+        .control-group {
+          padding: 15px;
+        }
+
+        .control-label {
+          font-size: 1rem;
+          margin-bottom: 12px;
+        }
+
+        .instructions {
+          margin-top: 20px;
+          padding: 20px;
+        }
+
+        .instructions h3 {
+          font-size: 1.2rem;
+        }
+
+        .instructions p {
+          font-size: 0.9rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        body {
+          overflow-y: auto;
+          height: 100vh;
+        }
+
+        .main-container {
+          padding: 5px;
+          max-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .game-area {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          padding: 10px;
+          min-height: 0;
+        }
+
+        .canvas-container {
+          height: 30vh;
+          min-height: 200px;
+          max-height: 250px;
+          flex: 1;
+        }
+
+        .controls {
+          margin-top: 8px;
+          padding: 10px;
+          flex-shrink: 0;
+        }
+
+        .controls-grid {
+          display: flex;
+          gap: 6px;
+        }
+
+        .control-group {
+          flex: 1;
+          padding: 6px;
+        }
+
+        .control-value {
+          font-size: 0.75rem;
+          padding: 4px 8px;
+          min-width: 45px;
+        }
+
+        .control-btn {
+          width: 28px;
+          height: 28px;
+          font-size: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
+        }
+
+        .control-label {
+          font-size: 0.7rem;
+          margin-bottom: 4px;
+        }
+
+        .controls-title {
+          font-size: 0.9rem;
+          margin-bottom: 8px;
+        }
+
+        .control-buttons {
+          gap: 6px;
+        }
+
+        .info-panel {
+          margin-bottom: 8px;
+          padding: 8px 10px;
+          gap: 10px;
+        }
+
+        .info-item {
+          margin-bottom: 0;
+        }
+
+        .info-label {
+          font-size: 0.7rem;
+        }
+
+        .info-value {
+          font-size: 0.85rem;
+        }
+
+        .instructions {
+          margin-top: 6px;
+          padding: 8px;
+          flex-shrink: 0;
+        }
+
+        .instructions h3 {
+          font-size: 0.8rem;
+          margin-bottom: 4px;
+        }
+
+        .instructions p {
+          font-size: 0.65rem;
+          line-height: 1.3;
+        }
+      }
+
+      @media (max-width: 768px) and (orientation: landscape) {
+        .canvas-container {
+          height: 40vh;
+          min-height: 200px;
+          max-height: 250px;
+        }
+
+        .controls-grid {
+          display: flex;
+          gap: 15px;
+        }
+
+        .control-group {
+          flex: 1;
+        }
+
+        .info-panel {
+          position: absolute;
+          top: 15px;
+          left: 15px;
+          margin-bottom: 0;
+          display: block;
+        }
+
+        .info-item {
+          margin-bottom: 8px;
+        }
+      }
+
+      /* Very small screens */
+      @media (max-width: 360px) {
+        .canvas-container {
+          height: 25vh;
+          min-height: 180px;
+          max-height: 200px;
+        }
+
+        .control-btn {
+          width: 24px;
+          height: 24px;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
+        }
+
+        .control-value {
+          font-size: 0.65rem;
+          padding: 3px 6px;
+          min-width: 40px;
+        }
+
+        .controls-title {
+          font-size: 0.8rem;
+        }
+
+        .control-label {
+          font-size: 0.6rem;
+        }
+
+        .control-buttons {
+          gap: 4px;
+        }
+
+        .controls {
+          padding: 6px;
+        }
+
+        .control-group {
+          padding: 4px;
+        }
+
+        .main-container {
+          padding: 3px;
+        }
+
+        .game-area {
+          padding: 8px;
+        }
+
+        .info-panel {
+          padding: 6px 8px;
+        }
+
+        .instructions {
+          padding: 6px;
+        }
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-B0jZ1sg4.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BaiKPFAq.css">
+  </head>
+  <body>
+    <div class="theme-toggle">
+      <label class="theme-switch">
+        <input type="checkbox" id="themeToggle" />
+        <span class="slider">
+          <span class="theme-icons sun-icon">☀️</span>
+          <span class="theme-icons moon-icon">🌙</span>
+        </span>
+      </label>
+    </div>
+
+    <div class="main-container">
+      <div class="game-area">
+        <div class="info-panel">
+          <div class="info-item">
+            <span class="info-label">Shapes:</span>
+            <span class="info-value" id="numShapes">0</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Area:</span>
+            <span class="info-value" id="totalArea">0</span>
+          </div>
+        </div>
+
+        <div class="canvas-container">
+          <canvas id="canvas" width="800" height="600"></canvas>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="controls-title">🎮 Game Controls</div>
+        <div class="controls-grid">
+          <div class="control-group">
+            <div class="control-label">⚡ Spawn Rate</div>
+            <div class="control-buttons">
+              <button class="control-btn" id="decreaseFreq">−</button>
+              <div class="control-value" id="freqValue">1.0</div>
+              <button class="control-btn" id="increaseFreq">+</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">🌍 Gravity Force</div>
+            <div class="control-buttons">
+              <button class="control-btn" id="decreaseGrav">−</button>
+              <div class="control-value" id="gravValue">2.0</div>
+              <button class="control-btn" id="increaseGrav">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="instructions">
+        <h3>🎯 How to Play</h3>
+        <p>
+          Click empty space to spawn random shapes • Click shapes to remove them
+          • Hold +/− buttons to adjust settings • Have fun watching shapes fall!
+        </p>
+      </div>
+    </div>
+
+  </body>
+</html>
