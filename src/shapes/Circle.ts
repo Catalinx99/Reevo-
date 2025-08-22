@@ -25,7 +25,6 @@ export class Circle extends Shape {
     return Math.PI * this.radius * this.radius;
   }
 
-  // aici înlocuiești metoda isClicked din Shape
   isClicked(mouseX: number, mouseY: number): boolean {
     const dx = mouseX - this.x;
     const dy = mouseY - this.y;
